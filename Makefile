@@ -12,12 +12,12 @@ CPP_FILES = ${wildcard src/*.cpp} \
 
 C_FILES = ./src/EngineGL/vendors/glad/glad.c
 
-TARGET = scop
+TARGET = humangl
 
 all:
-	$(CXX) $(C_FILES) $(CPP_FILES) $(APP_INCLUDES) $(APP_LINKER) -o scop
+	$(CXX) $(C_FILES) $(CPP_FILES) $(APP_INCLUDES) $(APP_LINKER) -o ${TARGET}
 
 clean:
-	rm -rf scop
+	rm -rf ${TARGET}
 
 .PHONY: all clean

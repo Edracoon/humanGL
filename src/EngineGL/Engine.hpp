@@ -28,12 +28,14 @@ class Engine {
 		~Engine();
 
 		void	loadModel(const char * path);
-		void	addModel(const char * path);
+		void	addModel(const char * path, Vec3 color = Vec3(1.f, 1.f, 1.f));
 
 		void	loadShader(const char * vertexShaderPath, const char * fragmentShaderPath);
-		
+
 		void	initWindow();
 		void	render();
+
+		void	cleanUp();
 };
 
 extern Engine engine;

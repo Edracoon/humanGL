@@ -10,6 +10,16 @@ class Mat4 {
 	public:
 		float mat[4][4];
 
+		Mat4(float x1, float x2, float x3, float x4,
+			 float y1, float y2, float y3, float y4,
+			 float z1, float z2, float z3, float z4,
+			 float w1, float w2, float w3, float w4) {
+			mat[0][0] = x1; mat[0][1] = x2; mat[0][2] = x3; mat[0][3] = x4;
+			mat[1][0] = y1; mat[1][1] = y2; mat[1][2] = y3; mat[1][3] = y4;
+			mat[2][0] = z1; mat[2][1] = z2; mat[2][2] = z3; mat[2][3] = z4;
+			mat[3][0] = w1; mat[3][1] = w2; mat[3][2] = w3; mat[3][3] = w4;
+		}
+
 		Mat4(float homogene = 1.0f) {
 			mat[0][0] = 1.0f; mat[0][1] = 0.0f; mat[0][2] = 0.0f; mat[0][3] = 0.0f;
 			mat[1][0] = 0.0f; mat[1][1] = 1.0f; mat[1][2] = 0.0f; mat[1][3] = 0.0f;
@@ -60,10 +70,14 @@ class Mat4 {
 			return os;
 		}
 	
-		void translate(Vec3 vector) {
-			mat[0][3] = vector.x;
-			mat[1][3] = vector.y;
-			mat[2][3] = vector.z;
+		Mat4	translate(Vec3 vector) {
+			Mat4 translation(1.f, 0.f, 0.f, 0.f,
+							0.f, 1.f, 0.f, 0.f,
+							0.f, 0.f, 1.f, 0.f,
+							vector.x, vector.y, vector.z, 1.f);
+
+			// Multipliez la matrice de translation avec la matrice actuelle
+			return translation * *this;
 		}
 
 		Vec4 multiplyVector(const Vec4 vector) const {

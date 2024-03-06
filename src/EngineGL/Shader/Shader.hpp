@@ -18,6 +18,8 @@ class Shader {
 		string loadShaderString(const char* filepath);
 		GLuint compileShader(const char* filepath, GLenum type);
 
+		void	deleteShader();
+
 		// uniform functions
 		// void setMat4(std::string name, Mat4 val);
 };

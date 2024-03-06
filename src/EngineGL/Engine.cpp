@@ -24,7 +24,7 @@ void	Engine::initWindow()
 		glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
 	#endif
 
-	this->window = glfwCreateWindow(800, 600, "Scop", NULL, NULL);
+	this->window = glfwCreateWindow(800, 600, "HumanGL", NULL, NULL);
 
 	if (this->window == NULL)
 	{
@@ -47,8 +47,6 @@ void	Engine::initWindow()
 	glfwSetKeyCallback(this->window, Callback::keyCallback);
 	glfwSetScrollCallback(this->window, Callback::scrollCallback);
 	glfwSetDropCallback(this->window, Callback::dropCallback);
-
-	glViewport(0, 0, 800, 600);
 }
 
 void	Engine::loadModel(const char * path)
@@ -61,11 +59,17 @@ void	Engine::loadModel(const char * path)
 	this->models.push_back(this->model);
 }
 
-void	Engine::addModel(const char * path)
+void	Engine::addModel(const char * path, Vec3 color)
 {
 	Model model = Model(path);
+
+	model.color = color;
+
 	model.loadModel();
-	model.setVertices(NO_COLOR_MODE);
+	model.setVertices(TEXTURE_MODE);
+
+	model.texLoc =  glGetUniformLocation(this->shader.id, "tex");
+
 	this->models.push_back(model);
 }
 
@@ -86,11 +90,19 @@ void	Engine::render()
 
 		for (auto& model : this->models)
 		{
-			model.Rotate(0.2f, 0.2f, 0.2f, 0.0f);
+			// model.Rotate(0.2f, 0.2f, 0.2f, 0.0f);
 			model.draw(this->shader.id);
 		}
 
 		glfwSwapBuffers(this->window);
 		glfwPollEvents();    
 	}
+}
+
+void	Engine::cleanUp()
+{
+	for (auto& model : this->models)
+		model.deleteBuffers();
+
+	this->shader.deleteShader();
 }

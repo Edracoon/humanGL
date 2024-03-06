@@ -205,7 +205,7 @@ void Model::Rotate(float angle, float dirX, float dirY, float dirZ)
 // Translate (move) the model by specified offsets in the X, Y, and Z directions.
 void Model::Translate(float offsetX, float offsetY, float offsetZ)
 {
-	this->translationMatrix.translate(Vec3(offsetX, offsetY, offsetZ));
+	this->translationMatrix = this->translationMatrix.translate(Vec3(offsetX, offsetY, offsetZ));
 }
 
 // Scale the model uniformly by a specified factor.
@@ -319,61 +319,27 @@ void Model::setVertices(int mode)
 {
 	vector<vector<float>> newVertices;
 
-	if (mode == NO_COLOR_MODE) {
-		for (int i = 0; i < this->vertices.size(); i++) {
-			vector<float> vertex = this->vertices[i];
-			vertex.erase(vertex.begin() + 3, vertex.end());
-			newVertices.push_back(vertex);
-		}
-		this->currMode = NO_COLOR_MODE;
-		this->vertices = newVertices;
-		setupBuffers();
-	}
-	else if (mode == RAND_COLOR_MODE) {
-		for (int i = 0; i < this->vertices.size(); i++) {
-			vector<float> vertex = this->vertices[i];
-			// Replace / Insert the color values at the end of the vertex / at the 3rd index
-			vertex.erase(vertex.begin() + 3, vertex.end());
-	
-			vertex.push_back(randomFloat());
-			vertex.push_back(randomFloat());
-			vertex.push_back(randomFloat());
+	for (int i = 0; i < this->vertices.size(); i++) {
+		vector<float> vertex = this->vertices[i];
 
-			newVertices.push_back(vertex);
+		if (vertex.size() != 3) {
+			vertex.erase(vertex.begin() + 3, vertex.end());
 		}
-		this->currMode = RAND_COLOR_MODE;
-		this->vertices = newVertices;
-		setupBuffers();
-	}
-	else if (mode == TEXTURE_MODE) {
-		// Keep 3 vertices for each vertex
-		for (int i = 0; i < this->vertices.size(); i++) {
-			vector<float> vertex = this->vertices[i];
-			if (vertex.size() != 3) {
-				vertex.erase(vertex.begin() + 3, vertex.end());
-			}
-			vertex.push_back(randomFloat());
-			vertex.push_back(randomFloat());
-			vertex.push_back(randomFloat());
 
-			// if we have parsed the texture coordinates, we can use them to map the texture to the model
-			// if (this->verticeTextCoords.size() > 0) {
-			// 	vector<float> textCoords = this->verticeTextCoords[i];
-			// 	vertex.push_back(textCoords[0]);
-			// 	vertex.push_back(textCoords[1]);
-			// }
-			// else {
-				float t = atan2(vertex[2], vertex[0]);
-				float p = acos(vertex[1] / sqrt(pow(vertex[0], 2) + pow(vertex[1], 2) + pow(vertex[2], 2)));
-				vertex.push_back((t + M_PI) / (2.f * M_PI));
-				vertex.push_back(p / M_PI);
-			// }
-			newVertices.push_back(vertex);
-		}
-		this->currMode = TEXTURE_MODE;
-		this->vertices = newVertices;
-		setupBuffers();
+		vertex.push_back(color.x);
+		vertex.push_back(color.y);
+		vertex.push_back(color.z);
+
+		float t = atan2(vertex[2], vertex[0]);
+		float p = acos(vertex[1] / sqrt(pow(vertex[0], 2) + pow(vertex[1], 2) + pow(vertex[2], 2)));
+		vertex.push_back((t + M_PI) / (2.f * M_PI));
+		vertex.push_back(p / M_PI);
+		newVertices.push_back(vertex);
 	}
+	this->currMode = mode;
+	this->vertices = newVertices;
+	setupBuffers();
+	cout << "currMode -> " << currMode << endl;
 }
 
 void Model::loadTexture(const char* path) {
@@ -384,8 +350,6 @@ void Model::setupBuffers() {
 
 	float* vertices = this->transformVertices();
 	int* faces = this->transformFaces(); 
-
-	cout << "Curr Mode : " << currMode << endl;
 
 	glGenVertexArrays(1, &VAO);
 	glGenBuffers(1, &VBO);
@@ -398,24 +362,18 @@ void Model::setupBuffers() {
 	glBindBuffer(GL_ARRAY_BUFFER, VBO);
 	glBufferData(GL_ARRAY_BUFFER, sizeof(float) * this->vertices.size() * currMode, vertices, GL_STATIC_DRAW);
 
-	// positions
+	// Vertices
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, currMode * sizeof(float), (void*)0);
 	glEnableVertexAttribArray(0);
 
-	// colors
-	if (currMode == RAND_COLOR_MODE) {
-		glUniform1i(texLoc, 0);
-		glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, currMode * sizeof(float), (void*)(3 * sizeof(float))); // Décalage de 3 composantes
-		glEnableVertexAttribArray(1);
-	}
-	else if (currMode == TEXTURE_MODE) {
-		glUniform1i(texLoc, 1);
-		glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, currMode * sizeof(float), (void*)(3 * sizeof(float))); // Décalage de 3 composantes
-		glEnableVertexAttribArray(1);
-		glBindTexture(GL_TEXTURE_2D, this->textureID);
-		glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, currMode * sizeof(float), (void*)(6 * sizeof(float))); // Décalage de 3 composantes
-		glEnableVertexAttribArray(2);
-	}
+	// Textures and colors
+	glUniform1i(texLoc, 1);
+	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, currMode * sizeof(float), (void*)(3 * sizeof(float))); // Décalage de 3 composantes
+	glEnableVertexAttribArray(1);
+
+	glBindTexture(GL_TEXTURE_2D, this->textureID);
+	glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, currMode * sizeof(float), (void*)(6 * sizeof(float))); // Décalage de 3 composantes
+	glEnableVertexAttribArray(2);
 
 	// set up EBO
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
@@ -425,7 +383,7 @@ void Model::setupBuffers() {
 void	Model::draw(unsigned int shaderID) {
 
 	glUniformMatrix4fv(glGetUniformLocation(shaderID, "transform"), 1, GL_FALSE, this->createFinalMatrix().GetDataPtr());
-
+	
 	// Bind VAO and other buffers to draw the model
 	this->setupBuffers();
 

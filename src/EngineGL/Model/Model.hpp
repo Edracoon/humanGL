@@ -49,7 +49,9 @@ class Model
 	Mat4 					scaleMatrix = Mat4();
 	Mat4 					translationMatrix = Mat4();
 
-	int						currMode = 8;
+	int						currMode = TEXTURE_MODE;
+
+	Vec3					color = Vec3(0.6f, 0.6f, 0.4f);
 
 	// VAO, VBO, and EBO
 	unsigned int			VAO, VBO, EBO;

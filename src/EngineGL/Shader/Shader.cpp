@@ -77,3 +77,7 @@ string Shader::loadShaderString(const char *filename) {
 
 	return ret;
 };
+
+void Shader::deleteShader() {
+	glDeleteProgram(this->id);
+}
